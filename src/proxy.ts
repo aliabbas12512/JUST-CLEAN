@@ -2,7 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PROTECTED = ["/account", "/orders", "/checkout", "/partner", "/rider", "/admin", "/notifications", "/support"];
-const PUBLIC_EXCEPTIONS = ["/partner/join", "/rider/join"];
 
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +24,7 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(p + "/")) && !PUBLIC_EXCEPTIONS.includes(path);
+  const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(p + "/"));
   if (needsAuth && !data.user) {
     const login = request.nextUrl.clone();
     login.pathname = "/login";

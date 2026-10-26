@@ -4,6 +4,8 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Files are uploaded from the browser straight to Supabase Storage; actions only carry form fields.
+  experimental: { serverActions: { bodySizeLimit: "1mb" } },
   images: {
     remotePatterns: supabaseHost ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }] : [],
   },
