@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #eef6fd;
+  --color-brand-100: #d6e9fa;
+  --color-brand-200: #a9d2f5;
+  --color-brand-300: #6fb5ee;
+  --color-brand-400: #3a98e6;
+  --color-brand-500: #1a7fd6;
+  --color-brand-600: #1166b8;
+  --color-brand-700: #0f5195;
+  --color-brand-800: #0d3f73;
+  --color-brand-900: #0b2e5c;
+  --color-brand-950: #071d3b;
+  --color-sky-accent: #22a7f0;
+  --font-sans: var(--app-font), "IBM Plex Sans Arabic", "Noto Naskh Arabic", system-ui, sans-serif;
+  --radius-card: 1rem;
+}
+
+:root {
+  --app-font: "IBM Plex Sans Arabic";
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --fg: #0f1b2d;
+  --muted: #5b6b80;
+  --line: #e3e8ef;
+  color-scheme: light;
+}
+
+html[lang="ur"] {
+  --app-font: "Noto Nastaliq Urdu";
+}
+html[lang="ur"] body {
+  line-height: 2.1;
+}
+/* Numbers, codes and inputs read better in a Naskh/Latin face even in Urdu. */
+html[lang="ur"] .font-num,
+html[lang="ur"] input,
+html[lang="ur"] select,
+html[lang="ur"] textarea {
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-num {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(-100%); }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e8edf3;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
