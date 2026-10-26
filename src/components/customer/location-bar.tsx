@@ -55,7 +55,7 @@ export function LocationBar({ cities, compact = false }: { cities: City[]; compa
           aria-label={t.home.chooseCity}
           value={currentCity}
           onChange={(e) => e.target.value && go(new URLSearchParams({ city: e.target.value }))}
-          className="h-11 flex-1 rounded-xl bg-white px-3 ring-1 ring-inset ring-[var(--line)] focus:ring-2 focus:ring-brand-500"
+          className="h-11 flex-1 rounded-xl bg-white px-3 text-brand-950 ring-1 ring-inset ring-[var(--line)] focus:ring-2 focus:ring-brand-500"
         >
           <option value="">{t.home.chooseCity}</option>
           {cities.map((c) => (

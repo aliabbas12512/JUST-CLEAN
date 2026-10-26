@@ -45,6 +45,16 @@ export function riyadhNow(d = new Date()): { day: number; hm: string; ymd: strin
   return { day: days.indexOf(parts.weekday), hm: `${parts.hour}:${parts.minute}`, ymd: `${parts.year}-${parts.month}-${parts.day}` };
 }
 
+/** Whole days from now until `v` (negative when past). */
+export function daysUntil(v: string | Date | null | undefined, now = new Date()): number {
+  if (!v) return 0;
+  return Math.ceil((new Date(v).getTime() - now.getTime()) / 86400000);
+}
+
+export function isPast(v: string | Date | null | undefined, now = new Date()): boolean {
+  return !!v && new Date(v).getTime() < now.getTime();
+}
+
 export function mapsUrl(lat?: number | null, lng?: number | null, label?: string | null): string | null {
   if (lat != null && lng != null) return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
   if (label) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`;

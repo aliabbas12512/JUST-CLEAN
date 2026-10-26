@@ -149,7 +149,7 @@ export function Alert({ tone = "blue", title, children, icon }: { tone?: "blue" 
   } as const;
   const ic: IconName = icon ?? (tone === "red" || tone === "amber" ? "alert" : tone === "green" ? "check" : "info");
   return (
-    <div className={`flex gap-3 rounded-xl px-4 py-3 ring-1 ${map[tone]}`} role={tone === "red" ? "alert" : undefined}>
+    <div className={`flex gap-3 rounded-xl px-4 py-3 ring-1 ${map[tone]}`} role={tone === "red" ? "alert" : undefined} data-tone={tone}>
       <Icon name={ic} className="mt-0.5 size-5" />
       <div className="text-sm">
         {title && <p className="font-bold">{title}</p>}

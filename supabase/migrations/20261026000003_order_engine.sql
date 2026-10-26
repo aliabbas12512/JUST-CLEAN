@@ -6,7 +6,7 @@
 -- Internal helpers (not callable by clients)
 -- ---------------------------------------------------------------------------
 create or replace function public._uid() returns uuid
-language plpgsql stable as $$
+language plpgsql stable set search_path = public as $$
 declare v uuid := auth.uid();
 begin
   if v is null then
@@ -16,7 +16,7 @@ begin
 end $$;
 
 create or replace function public._fail(p_code text) returns void
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   raise exception '%', p_code using errcode = 'P0001';
 end $$;
@@ -41,15 +41,15 @@ $$;
 
 -- 4-digit handover code from a cryptographically random UUID.
 create or replace function public._handover_code() returns text
-language sql volatile as $$
+language sql volatile set search_path = public as $$
   select lpad(((('x' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 8))::bit(32)::bigint % 9000) + 1000)::text, 4, '0')
 $$;
 
 create or replace function public._needs_pickup(f public.fulfillment_method) returns boolean
-language sql immutable as $$ select f in ('pickup_delivery','pickup_only') $$;
+language sql immutable set search_path = public as $$ select f in ('pickup_delivery','pickup_only') $$;
 
 create or replace function public._needs_return(f public.fulfillment_method) returns boolean
-language sql immutable as $$ select f in ('pickup_delivery','delivery_only') $$;
+language sql immutable set search_path = public as $$ select f in ('pickup_delivery','delivery_only') $$;
 
 -- Sets status + writes a timeline event + notifies the customer.
 create or replace function public._set_status(p_order uuid, p_status public.order_status, p_event text, p_note text, p_role text)
@@ -69,9 +69,11 @@ end $$;
 -- Opens a delivery job for the given leg (idempotent per live leg).
 create or replace function public._open_job(p_order uuid, p_leg public.job_leg)
 returns uuid language plpgsql security definer set search_path = public as $$
-declare o record; l record; v_id uuid; v_fee numeric;
+declare o record; l record; v_id uuid; v_fee numeric; v_area text;
 begin
   select * into o from public.orders where id = p_order;
+  -- Area shown to riders before they claim: district, else the city name (never the street address).
+  v_area := coalesce(nullif(o.district_text, ''), (select c.name_ar from public.cities c where c.id = o.city_id));
   select * into l from public.laundries where id = o.laundry_id;
   select id into v_id from public.delivery_jobs
     where order_id = p_order and leg = p_leg and status in ('open','assigned','picked_up');
@@ -82,14 +84,14 @@ begin
   if p_leg = 'pickup' then
     insert into public.delivery_jobs (order_id, order_number, leg, city_id, from_label, from_area, from_lat, from_lng,
                                       to_label, to_area, to_lat, to_lng, rider_fee)
-    values (p_order, o.order_number, 'pickup', o.city_id, coalesce(o.address_line, ''), o.district_text, o.address_lat, o.address_lng,
+    values (p_order, o.order_number, 'pickup', o.city_id, coalesce(o.address_line, ''), v_area, o.address_lat, o.address_lng,
             l.name || ' — ' || l.address, coalesce(l.district_text, l.name), l.lat, l.lng, v_fee)
     returning id into v_id;
   else
     insert into public.delivery_jobs (order_id, order_number, leg, city_id, from_label, from_area, from_lat, from_lng,
                                       to_label, to_area, to_lat, to_lng, rider_fee)
     values (p_order, o.order_number, 'return', o.city_id, l.name || ' — ' || l.address, coalesce(l.district_text, l.name), l.lat, l.lng,
-            coalesce(o.address_line, ''), o.district_text, o.address_lat, o.address_lng, v_fee)
+            coalesce(o.address_line, ''), v_area, o.address_lat, o.address_lng, v_fee)
     returning id into v_id;
   end if;
   return v_id;
@@ -199,7 +201,7 @@ declare
   l public.laundries; s public.platform_settings; it jsonb; sv public.services;
   cp public.customer_packages; pr public.promo_codes;
   v_qty numeric; v_line numeric; v_subtotal numeric := 0; v_estimate boolean := false;
-  v_items jsonb := '[]'::jsonb; v_errors text[] := '{}';
+  v_items jsonb := '[]'::jsonb; v_errors text[] := '{}'::text[];
   v_pickup numeric := 0; v_delivery numeric := 0; v_discount numeric := 0;
   v_pkg_remaining int := 0; v_pkg_cover int; v_pkg_pieces int := 0; v_pkg_credit numeric := 0;
   v_total numeric; v_vat numeric := 0; v_uid uuid := auth.uid(); v_eligible boolean;
@@ -471,10 +473,9 @@ end $$;
 
 create or replace function public._complete_order(p_order uuid, p_role text)
 returns void language plpgsql security definer set search_path = public as $$
-declare s record; o record;
+declare s record;
 begin
   select * into s from public.platform_settings where id = 1;
-  select * into o from public.orders where id = p_order;
   if s.commission_enabled then
     update public.orders set commission_amount =
       round(coalesce(case when adjustment_status = 'approved' then final_total end, total) * s.commission_percent / 100, 2)
@@ -535,7 +536,7 @@ end $$;
 -- Partner actions
 -- ---------------------------------------------------------------------------
 create or replace function public._assert_owner(p_laundry uuid) returns void
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 begin
   if not exists (select 1 from public.laundries where id = p_laundry and owner_id = auth.uid()) and not public.is_admin() then
     perform public._fail('forbidden');
@@ -644,6 +645,7 @@ begin
     return public._open_job(p_order, 'return');
   end if;
   perform public._fail('invalid_transition');
+  return null;
 end $$;
 
 create or replace function public.partner_adjust_price(p_order uuid, p_final_total numeric, p_note text)
@@ -775,7 +777,7 @@ end $$;
 -- Rider actions
 -- ---------------------------------------------------------------------------
 create or replace function public._active_rider() returns public.riders
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 declare r public.riders;
 begin
   select * into r from public.riders where id = auth.uid();
@@ -797,7 +799,7 @@ end $$;
 create or replace function public.rider_open_jobs()
 returns table (id uuid, order_number text, leg public.job_leg, from_area text, to_area text,
                distance_km double precision, rider_fee numeric, window_start timestamptz, window_end timestamptz, created_at timestamptz)
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 declare r public.riders := public._active_rider();
 begin
   return query
@@ -919,7 +921,7 @@ end $$;
 -- Admin actions
 -- ---------------------------------------------------------------------------
 create or replace function public._assert_admin() returns void
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then perform public._fail('forbidden'); end if;
 end $$;
@@ -1043,6 +1045,7 @@ begin
   if o.status = 'accepted' and public._needs_pickup(o.fulfillment) then return public._open_job(p_order, 'pickup'); end if;
   if o.status = 'ready' and public._needs_return(o.fulfillment) then return public._open_job(p_order, 'return'); end if;
   perform public._fail('invalid_transition');
+  return null;
 end $$;
 
 create or replace function public.admin_cancel_order(p_order uuid, p_reason text)

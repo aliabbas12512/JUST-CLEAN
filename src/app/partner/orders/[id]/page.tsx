@@ -16,6 +16,16 @@ import type { DeliveryJob, Order, OrderEvent, OrderItem } from "@/lib/types";
 
 type RiderInfo = { job_id: string; leg: string; job_status: string; rider_name: string; rider_phone: string; vehicle_type: string };
 
+function Step({ id, to, label, variant = "primary" }: { id: string; to: string; label: string; variant?: "primary" | "success" }) {
+  return (
+    <ActionForm action={advanceOrderAction}>
+      <input type="hidden" name="order_id" value={id} />
+      <input type="hidden" name="to" value={to} />
+      <SubmitButton variant={variant} size="lg" className="w-full">{label}</SubmitButton>
+    </ActionForm>
+  );
+}
+
 export default async function PartnerOrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { t, locale } = await getI18n();
   const { id } = await params;
@@ -38,13 +48,6 @@ export default async function PartnerOrderPage({ params }: { params: Promise<{ i
   const canMarkPaid = !["placed", "rejected", "cancelled"].includes(s) && order.payment_status !== "paid" && order.adjustment_status !== "pending";
   const p = t.partner;
 
-  const Step = ({ to, label, variant = "primary" as const }: { to: string; label: string; variant?: "primary" | "success" }) => (
-    <ActionForm action={advanceOrderAction}>
-      <input type="hidden" name="order_id" value={id} />
-      <input type="hidden" name="to" value={to} />
-      <SubmitButton variant={variant} size="lg" className="w-full">{label}</SubmitButton>
-    </ActionForm>
-  );
 
   return (
     <div className="space-y-4">
@@ -80,12 +83,12 @@ export default async function PartnerOrderPage({ params }: { params: Promise<{ i
           )
         )}
         {s === "accepted" && !needsPickup(order.fulfillment) && (
-          <div className="space-y-2"><p className="text-sm text-[var(--muted)]">{p.waitingCustomerDropoff}</p><Step to="received" label={p.markReceived} /></div>
+          <div className="space-y-2"><p className="text-sm text-[var(--muted)]">{p.waitingCustomerDropoff}</p><Step id={id} to="received" label={p.markReceived} /></div>
         )}
         {s === "pickup_assigned" && <Alert tone="blue">{p.waitingRiderPickup}</Alert>}
-        {s === "picked_up" && <Step to="received" label={p.markReceived} />}
-        {s === "received" && <Step to="processing" label={p.startProcessing} />}
-        {s === "processing" && (order.adjustment_status === "pending" ? <Alert tone="amber">{p.adjustPending}</Alert> : <Step to="ready" label={p.markReady} variant="success" />)}
+        {s === "picked_up" && <Step id={id} to="received" label={p.markReceived} />}
+        {s === "received" && <Step id={id} to="processing" label={p.startProcessing} />}
+        {s === "processing" && (order.adjustment_status === "pending" ? <Alert tone="amber">{p.adjustPending}</Alert> : <Step id={id} to="ready" label={p.markReady} variant="success" />)}
         {s === "ready" && needsReturn(order.fulfillment) && (
           hasLiveJob("return") ? <Alert tone="blue">{p.waitingRider}</Alert> : (
             <ActionForm action={requestRiderAction}><input type="hidden" name="order_id" value={id} /><SubmitButton icon="bike">{p.requestRider}</SubmitButton></ActionForm>
@@ -99,7 +102,7 @@ export default async function PartnerOrderPage({ params }: { params: Promise<{ i
             <SubmitButton variant="success" size="lg" className="w-full">{p.completeWithCode}</SubmitButton>
           </ActionForm>
         )}
-        {s === "return_assigned" && <Step to="out_for_delivery" label={p.handToRider} />}
+        {s === "return_assigned" && <Step id={id} to="out_for_delivery" label={p.handToRider} />}
         {["out_for_delivery", "delivered", "completed", "cancelled", "rejected"].includes(s) && <p className="font-semibold text-brand-950">{t.status[s]}</p>}
       </Card>
 

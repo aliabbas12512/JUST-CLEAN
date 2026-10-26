@@ -10,7 +10,7 @@ import { Icon } from "@/components/ui/icon";
 import { Alert, Card, CardHeader, EmptyState, KV, LinkButton, PageHeader, Textarea } from "@/components/ui/primitives";
 import { requireUser } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/env";
-import { dateTime, money, telUrl, timeOnly, windowLabel } from "@/lib/format";
+import { dateTime, isPast, money, telUrl, timeOnly, windowLabel } from "@/lib/format";
 import { getI18n } from "@/lib/i18n/server";
 import { fmt } from "@/lib/i18n/shared";
 import { needsPickup, needsReturn } from "@/lib/orders";
@@ -43,7 +43,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const closed = s === "completed" || s === "cancelled" || s === "rejected";
   const showPickupCode = needsPickup(order.fulfillment) && ["placed", "accepted", "pickup_assigned"].includes(s);
   const showDeliveryCode = !closed && s !== "delivered" && !showPickupCode;
-  const deadlinePassed = order.accept_deadline && new Date(order.accept_deadline).getTime() < Date.now();
+  const deadlinePassed = isPast(order.accept_deadline);
 
   return (
     <div className="space-y-4">

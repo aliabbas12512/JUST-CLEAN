@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Alert, Button, Field, Input } from "@/components/ui/primitives";
 import { useI18n } from "@/lib/i18n/client";
 import { fmt } from "@/lib/i18n/shared";
@@ -9,7 +8,6 @@ import { getBrowserClient } from "@/lib/supabase/client";
 
 export function LoginForm({ next }: { next: string }) {
   const { t } = useI18n();
-  const router = useRouter();
   const [mode, setMode] = useState<"phone" | "email">("phone");
   const [step, setStep] = useState<"ask" | "verify">("ask");
   const [identifier, setIdentifier] = useState("");
@@ -56,8 +54,8 @@ export function LoginForm({ next }: { next: string }) {
       : await sb.auth.verifyOtp({ email: sentTo, token: code.trim(), type: "email" });
     setBusy(false);
     if (error) return setError(t.auth.invalidCode);
-    router.replace(next);
-    router.refresh();
+    // Full navigation: the client router may hold prefetched "redirect to login" responses from before sign-in.
+    window.location.assign(next);
   };
 
   return (

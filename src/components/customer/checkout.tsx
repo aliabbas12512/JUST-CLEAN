@@ -52,8 +52,8 @@ export function Checkout({ laundry, services, cities, addresses, packages, profi
   const [promoInput, setPromoInput] = useState("");
   const [promo, setPromo] = useState("");
   const [pkgId, setPkgId] = useState<string>("");
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [quoting, setQuoting] = useState(false);
+  // The quote is tagged with the inputs it was computed for; it is "stale" while inputs change.
+  const [quoted, setQuoted] = useState<{ key: string; quote: Quote | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [placing, startPlacing] = useTransition();
   // One token per checkout visit: double taps and retries cannot create duplicate orders.
@@ -66,21 +66,21 @@ export function Checkout({ laundry, services, cities, addresses, packages, profi
       .map(([sid, v]) => ({ service_id: sid, quantity: v.qty, instructions: v.instructions || undefined }));
   }, [cart, laundry.id, byId]);
 
-  const itemsKey = JSON.stringify(lines.map((l) => [l.service_id, l.quantity]));
+  const quoteKey = JSON.stringify([lines.map((l) => [l.service_id, l.quantity]), method, promo, pkgId]);
   useEffect(() => {
-    if (lines.length === 0) { setQuote(null); return; }
+    if (lines.length === 0) return;
     let cancelled = false;
-    setQuoting(true);
     const h = setTimeout(async () => {
       const r = await quoteOrder({ laundryId: laundry.id, fulfillment: method, items: lines, promo, customerPackageId: pkgId || null });
       if (cancelled) return;
-      setQuoting(false);
-      if (r.ok && r.data) setQuote(r.data);
-      else setError(r.ok ? null : r.error);
+      setQuoted({ key: quoteKey, quote: r.ok && r.data ? r.data : null });
+      if (!r.ok) setError(r.error);
     }, 250);
     return () => { cancelled = true; clearTimeout(h); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [itemsKey, method, promo, pkgId, laundry.id]);
+  }, [quoteKey, laundry.id]);
+  const quote = quoted?.quote ?? null;
+  const quoting = quoted?.key !== quoteKey;
 
   const needsAddress = method !== "dropoff";
   const err = (k: string | null) => (k ? ((t.errors as Record<string, string>)[k] ?? t.errors.generic) : null);

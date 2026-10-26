@@ -60,7 +60,7 @@ export default async function RiderHome() {
             <div className="space-y-2">
               {openJobs.map((j) => (
                 <JobCard key={j.id} j={j} t={t} locale={locale}>
-                  <ActionForm action={claimJobAction} redirectTo={`/rider/jobs/${j.id}`}>
+                  <ActionForm action={claimJobAction}>
                     <input type="hidden" name="job_id" value={j.id} />
                     <SubmitButton size="lg" className="w-full">{t.rider.accept}</SubmitButton>
                   </ActionForm>

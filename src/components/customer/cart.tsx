@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export type CartLine = { qty: number; instructions?: string };
 export type Cart = { laundryId: string | null; items: Record<string, CartLine> };
@@ -8,13 +8,29 @@ const KEY = "jc_cart";
 const EVENT = "jc-cart";
 const empty: Cart = { laundryId: null, items: {} };
 
-function read(): Cart {
+// Snapshot cache: useSyncExternalStore needs a stable reference while the stored value is unchanged.
+let cachedRaw: string | null | undefined;
+let cached: Cart = empty;
+
+function readRaw(): string | null {
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Cart) : empty;
+    return localStorage.getItem(KEY);
   } catch {
-    return empty;
+    return null;
   }
+}
+
+function snapshot(): Cart {
+  const raw = readRaw();
+  if (raw !== cachedRaw) {
+    cachedRaw = raw;
+    try {
+      cached = raw ? (JSON.parse(raw) as Cart) : empty;
+    } catch {
+      cached = empty;
+    }
+  }
+  return cached;
 }
 
 function write(c: Cart) {
@@ -24,25 +40,24 @@ function write(c: Cart) {
   window.dispatchEvent(new Event(EVENT));
 }
 
+function subscribe(cb: () => void) {
+  window.addEventListener(EVENT, cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    window.removeEventListener(EVENT, cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+
+const serverSnapshot = () => null;
+
 /** Cart persisted in localStorage; one laundry at a time (like food apps). */
 export function useCart() {
-  const [cart, setCart] = useState<Cart>(empty);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const sync = () => setCart(read());
-    sync();
-    setReady(true);
-    window.addEventListener(EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
+  const state = useSyncExternalStore<Cart | null>(subscribe, snapshot, serverSnapshot);
+  const cart = state ?? empty;
 
   const setQty = useCallback((laundryId: string, serviceId: string, qty: number, confirmSwitch: () => boolean) => {
-    let c = read();
+    let c = snapshot();
     if (c.laundryId && c.laundryId !== laundryId && Object.keys(c.items).length > 0) {
       if (!confirmSwitch()) return;
       c = { laundryId, items: {} };
@@ -54,13 +69,12 @@ export function useCart() {
   }, []);
 
   const setInstructions = useCallback((serviceId: string, instructions: string) => {
-    const c = read();
+    const c = snapshot();
     if (!c.items[serviceId]) return;
     write({ ...c, items: { ...c.items, [serviceId]: { ...c.items[serviceId], instructions: instructions.slice(0, 300) } } });
   }, []);
 
   const clear = useCallback(() => write(empty), []);
 
-  const count = Object.keys(cart.items).length;
-  return { cart, ready, count, setQty, setInstructions, clear };
+  return { cart, ready: state !== null, count: Object.keys(cart.items).length, setQty, setInstructions, clear };
 }

@@ -19,8 +19,8 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-[var(--line)] bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
         <Link href="/" className="flex items-center gap-2">
-          <Image src={brand.logo} alt={brand.latinName} width={40} height={40} className="size-10 rounded-lg" priority />
-          <span className="text-lg font-extrabold text-brand-900">{brand.name[locale]}</span>
+          <Image src={brand.logo} alt={brand.latinName} width={40} height={40} className="size-9 rounded-lg sm:size-10" priority />
+          <span className="whitespace-nowrap text-base font-extrabold text-brand-900 sm:text-lg">{brand.name[locale]}</span>
         </Link>
         <nav className="hidden items-center gap-1 md:flex">
           <Link href="/" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">{t.nav.home}</Link>
@@ -29,7 +29,7 @@ export async function SiteHeader() {
           <Link href="/partner" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">{t.nav.forBusiness}</Link>
         </nav>
         <div className="flex items-center gap-2">
-          <LanguageSwitch className="hidden sm:inline-flex" />
+          <div className="hidden sm:block"><LanguageSwitch /></div>
           {user ? (
             <>
               <Link href="/notifications" className="relative rounded-lg p-2 text-brand-900 hover:bg-slate-50" aria-label={t.nav.notifications}>

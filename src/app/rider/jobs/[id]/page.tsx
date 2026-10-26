@@ -9,6 +9,18 @@ import { getI18n } from "@/lib/i18n/server";
 import { displayPhone } from "@/lib/phone";
 import type { DeliveryJob } from "@/lib/types";
 
+function CodeForm({ jobId, action, label, button }: { jobId: string; action: typeof confirmPickupAction; label: string; button: string }) {
+  return (
+    <ActionForm action={action} className="space-y-3">
+      <input type="hidden" name="job_id" value={jobId} />
+      <Field label={label}>
+        <Input name="code" required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="off" dir="ltr" className="h-16 text-center text-3xl font-bold tracking-[0.5em]" />
+      </Field>
+      <SubmitButton variant="success" size="lg" className="w-full" icon="check">{button}</SubmitButton>
+    </ActionForm>
+  );
+}
+
 export default async function RiderJobPage({ params }: { params: Promise<{ id: string }> }) {
   const { t, locale } = await getI18n();
   const { id } = await params;
@@ -26,15 +38,6 @@ export default async function RiderJobPage({ params }: { params: Promise<{ id: s
   const fromUrl = mapsUrl(job.from_lat, job.from_lng, job.from_label);
   const toUrl = mapsUrl(job.to_lat, job.to_lng, job.to_label);
 
-  const CodeForm = ({ action, label, button }: { action: typeof confirmPickupAction; label: string; button: string }) => (
-    <ActionForm action={action} className="space-y-3">
-      <input type="hidden" name="job_id" value={job.id} />
-      <Field label={label}>
-        <Input name="code" required inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="off" dir="ltr" className="h-16 text-center text-3xl font-bold tracking-[0.5em]" />
-      </Field>
-      <SubmitButton variant="success" size="lg" className="w-full" icon="check">{button}</SubmitButton>
-    </ActionForm>
-  );
 
   return (
     <div className="space-y-4">
@@ -66,16 +69,16 @@ export default async function RiderJobPage({ params }: { params: Promise<{ id: s
         )}
       </Card>
 
-      {job.leg === "pickup" && job.status === "assigned" && <Card className="p-4"><CodeForm action={confirmPickupAction} label={r.enterPickupCode} button={r.confirmPickup} /></Card>}
+      {job.leg === "pickup" && job.status === "assigned" && <Card className="p-4"><CodeForm jobId={job.id} action={confirmPickupAction} label={r.enterPickupCode} button={r.confirmPickup} /></Card>}
       {job.leg === "pickup" && job.status === "picked_up" && <Alert tone="blue" icon="store">{r.deliverToLaundry}</Alert>}
       {job.leg === "return" && job.status === "assigned" && <Alert tone="blue" icon="store">{r.awaitHandover}</Alert>}
-      {job.leg === "return" && job.status === "picked_up" && <Card className="p-4"><CodeForm action={confirmDeliveryAction} label={r.enterDeliveryCode} button={r.confirmDelivery} /></Card>}
+      {job.leg === "return" && job.status === "picked_up" && <Card className="p-4"><CodeForm jobId={job.id} action={confirmDeliveryAction} label={r.enterDeliveryCode} button={r.confirmDelivery} /></Card>}
       {!live && <Alert tone={job.status === "delivered" ? "green" : "amber"}>{r.jobStatus[job.status]}{job.fail_reason && ` — ${job.fail_reason}`}</Alert>}
 
       {live && (
         <div className="grid gap-2 sm:grid-cols-2">
           {job.status === "assigned" && (
-            <ActionForm action={releaseJobAction} redirectTo="/rider">
+            <ActionForm action={releaseJobAction}>
               <input type="hidden" name="job_id" value={job.id} />
               <SubmitButton variant="secondary" className="w-full" confirmText={t.common.areYouSure}>{r.release}</SubmitButton>
             </ActionForm>

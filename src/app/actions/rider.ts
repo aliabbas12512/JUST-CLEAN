@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { errorKey } from "@/lib/errors";
@@ -70,7 +71,11 @@ async function rpc(fn: string, args: Record<string, unknown>, path: string): Pro
 }
 
 export async function claimJobAction(_: unknown, fd: FormData) {
-  return rpc("rider_claim_job", { p_job: String(fd.get("job_id")) }, "/rider");
+  const id = String(fd.get("job_id"));
+  const r = await rpc("rider_claim_job", { p_job: id }, "/rider");
+  // Server-side redirect: the job card that submitted this form disappears from the list on success.
+  if (r.ok) redirect(`/rider/jobs/${id}`);
+  return r;
 }
 export async function confirmPickupAction(_: unknown, fd: FormData) {
   const id = String(fd.get("job_id"));
@@ -81,7 +86,9 @@ export async function confirmDeliveryAction(_: unknown, fd: FormData) {
   return rpc("rider_confirm_delivery", { p_job: id, p_code: String(fd.get("code") ?? "").trim() }, `/rider/jobs/${id}`);
 }
 export async function releaseJobAction(_: unknown, fd: FormData) {
-  return rpc("rider_release_job", { p_job: String(fd.get("job_id")) }, "/rider");
+  const r = await rpc("rider_release_job", { p_job: String(fd.get("job_id")) }, "/rider");
+  if (r.ok) redirect("/rider");
+  return r;
 }
 export async function failJobAction(_: unknown, fd: FormData) {
   const id = String(fd.get("job_id"));

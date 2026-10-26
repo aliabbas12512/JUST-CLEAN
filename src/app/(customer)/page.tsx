@@ -76,7 +76,10 @@ export default async function HomePage({ searchParams }: { searchParams: SP }) {
     if (q) p.set("q", q);
     if (sort !== "recommended") p.set("sort", sort);
     if (filters.size) p.set("f", [...filters].join(","));
-    for (const [k, v] of Object.entries(patch)) (v === null ? p.delete(k) : p.set(k, v));
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null) p.delete(k);
+      else p.set(k, v);
+    }
     return `/?${p.toString()}`;
   };
   const toggleFilter = (f: string) => {

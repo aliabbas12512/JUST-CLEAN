@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:db": "bash scripts/test-db.sh"
+    "test:db": "bash scripts/test-db.sh",
+    "test:e2e": "node e2e/full-flow.mjs",
+    "db:start": "npx supabase@2.122.0 start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta",
+    "db:reset": "npx supabase@2.122.0 db reset"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -29,5 +32,8 @@
     "postcss": "^8.5.32",
     "tailwindcss": "^4.3.3",
     "typescript": "5.9"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }
