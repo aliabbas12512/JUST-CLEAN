@@ -64,6 +64,7 @@ const ar = {
     sort: "ترتيب",
     more: "المزيد",
     copy: "نسخ",
+    type: "النوع",
     unknown: "غير معروف",
   },
   setup: {
@@ -345,6 +346,22 @@ const ar = {
     failed: "مرفوض",
     refunded: "مسترد",
   },
+  laundryStatus: {
+    draft: "مسودة",
+    submitted: "بانتظار المراجعة",
+    under_review: "قيد المراجعة",
+    approved: "معتمدة",
+    rejected: "مرفوضة",
+    info_required: "مطلوب معلومات",
+  },
+  subscriptionStatus: {
+    pending: "بانتظار الدفع",
+    active: "نشط",
+    past_due: "متأخر السداد",
+    expired: "منتهي",
+    suspended: "موقوف",
+    cancelled: "ملغي",
+  },
   paymentKind: {
     partner_subscription: "اشتراك مغسلة",
     order: "طلب",
@@ -444,6 +461,7 @@ const ar = {
       package_active: "تم تفعيل باقتك",
       package_purchase_pending: "طلب شراء باقة بانتظار تأكيد الدفع",
       refund_pending: "طلب استرداد جديد",
+      support_reply: "رد فريق الدعم على: {subject}",
       refund_processed: "تم استرداد {amount} ر.س",
     },
   },

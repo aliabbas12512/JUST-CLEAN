@@ -17,8 +17,8 @@ export function dictFor(locale: Locale): Dict {
 }
 
 // Both supported languages are right-to-left.
-export function dirFor(_locale: Locale): "rtl" | "ltr" {
-  return "rtl";
+export function dirFor(locale: Locale): "rtl" | "ltr" {
+  return locale === "ar" || locale === "ur" ? "rtl" : "ltr";
 }
 
 /** Replaces {key} placeholders. */

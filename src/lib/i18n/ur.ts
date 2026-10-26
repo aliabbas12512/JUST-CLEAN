@@ -65,6 +65,7 @@ const ur: Dict = {
     sort: "ترتیب",
     more: "مزید",
     copy: "کاپی",
+    type: "قسم",
     unknown: "نامعلوم",
   },
   setup: {
@@ -346,6 +347,22 @@ const ur: Dict = {
     failed: "مسترد",
     refunded: "واپس شدہ",
   },
+  laundryStatus: {
+    draft: "ڈرافٹ",
+    submitted: "جائزے کی منتظر",
+    under_review: "زیرِ جائزہ",
+    approved: "منظور شدہ",
+    rejected: "مسترد",
+    info_required: "معلومات درکار",
+  },
+  subscriptionStatus: {
+    pending: "ادائیگی کا انتظار",
+    active: "فعال",
+    past_due: "ادائیگی میں تاخیر",
+    expired: "میعاد ختم",
+    suspended: "معطل",
+    cancelled: "منسوخ",
+  },
   paymentKind: {
     partner_subscription: "لانڈری سبسکرپشن",
     order: "آرڈر",
@@ -445,6 +462,7 @@ const ur: Dict = {
       package_active: "آپ کا پیکج فعال ہو گیا",
       package_purchase_pending: "پیکج کی خریداری ادائیگی کی تصدیق کی منتظر",
       refund_pending: "رقم واپسی کی نئی درخواست",
+      support_reply: "سپورٹ ٹیم نے جواب دیا: {subject}",
       refund_processed: "{amount} ریال واپس کر دیے گئے",
     },
   },

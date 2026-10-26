@@ -13,7 +13,7 @@ $$;
 
 -- Admin dashboard counters in one round trip.
 create or replace function public.admin_metrics()
-returns jsonb language plpgsql stable security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public as $$
 declare v jsonb;
 begin
   perform public._assert_admin();
@@ -42,7 +42,7 @@ end $$;
 
 -- Revenue report for a date range (admin). Keeps gross order value separate from platform revenue.
 create or replace function public.admin_revenue_report(p_from timestamptz, p_to timestamptz)
-returns jsonb language plpgsql stable security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   perform public._assert_admin();
   return jsonb_build_object(
@@ -63,7 +63,7 @@ end $$;
 
 -- Partner report for one laundry and date range.
 create or replace function public.partner_report(p_laundry uuid, p_from timestamptz, p_to timestamptz)
-returns jsonb language plpgsql stable security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public as $$
 begin
   perform public._assert_owner(p_laundry);
   return jsonb_build_object(
@@ -82,3 +82,6 @@ begin
                  group by to_char(created_at at time zone 'Asia/Riyadh', 'YYYY-MM-DD')) x)
   );
 end $$;
+
+-- Staff can notify users (e.g. support replies).
+create policy notifications_admin_insert on public.notifications for insert with check (public.is_admin());

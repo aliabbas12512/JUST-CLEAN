@@ -3,14 +3,11 @@ import { ActionForm, SubmitButton } from "@/components/ui/forms";
 import { Alert, Badge, Card, CardHeader, Field, Input, KV, PageHeader, Table, Td } from "@/components/ui/primitives";
 import { requireLaundry } from "@/lib/auth";
 import { isOnlinePaymentConfigured } from "@/lib/env";
-import { dateOnly, dateTime, money } from "@/lib/format";
+import { dateOnly, dateTime, daysUntil, money } from "@/lib/format";
 import { getI18n } from "@/lib/i18n/server";
 import { fmt } from "@/lib/i18n/shared";
-import type { PartnerSubscription, Payment, SubscriptionStatus } from "@/lib/types";
-
-const subTone: Record<SubscriptionStatus, "green" | "amber" | "red" | "gray"> = {
-  active: "green", pending: "amber", past_due: "amber", expired: "red", suspended: "red", cancelled: "gray",
-};
+import { subscriptionTone as subTone } from "@/lib/tones";
+import type { PartnerSubscription, Payment } from "@/lib/types";
 
 export default async function PartnerSubscriptionPage({ searchParams }: { searchParams: Promise<{ payment?: string; error?: string }> }) {
   const { t, locale } = await getI18n();
@@ -25,12 +22,8 @@ export default async function PartnerSubscriptionPage({ searchParams }: { search
   const list = (payments as Payment[]) ?? [];
   const pendingPay = list.find((p) => p.status === "pending" && p.method !== "online");
   const sp2 = t.partner.subscriptionPage;
-  const statusLabel: Record<SubscriptionStatus, string> = {
-    pending: t.paymentRecordStatus.pending, active: t.common.active, past_due: t.paymentStatus.unpaid,
-    expired: t.packages.statusLabels.expired, suspended: t.rider.statusLabels.suspended, cancelled: t.packages.statusLabels.cancelled,
-  };
-  const graceEnd = s?.current_period_end ? new Date(new Date(s.current_period_end).getTime() + (settings?.grace_days ?? 0) * 86400000) : null;
-  const graceDaysLeft = graceEnd ? Math.max(0, Math.ceil((graceEnd.getTime() - Date.now()) / 86400000)) : 0;
+  const statusLabel = t.subscriptionStatus;
+  const graceDaysLeft = Math.max(0, daysUntil(s?.current_period_end) + (settings?.grace_days ?? 0));
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
