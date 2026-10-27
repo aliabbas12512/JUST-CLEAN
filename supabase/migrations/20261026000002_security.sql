@@ -66,7 +66,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 create or replace function public.touch_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   new.updated_at := now();
   return new;
@@ -112,7 +112,7 @@ create trigger on_auth_user_contact_changed after update of phone, email on auth
 -- Guard triggers: stop clients from writing privileged columns directly
 -- ---------------------------------------------------------------------------
 create or replace function public.guard_profiles() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   if not public.is_trusted_writer() then
     new.is_admin := old.is_admin;
@@ -126,7 +126,7 @@ create trigger guard_profiles before update on public.profiles
   for each row execute function public.guard_profiles();
 
 create or replace function public.guard_laundries() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   if public.is_trusted_writer() then
     return new;
@@ -156,7 +156,7 @@ create trigger guard_laundries before insert or update on public.laundries
   for each row execute function public.guard_laundries();
 
 create or replace function public.guard_riders() returns trigger
-language plpgsql as $$
+language plpgsql set search_path = public as $$
 begin
   if public.is_trusted_writer() then
     return new;
