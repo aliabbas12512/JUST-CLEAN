@@ -79,6 +79,27 @@ delivery code, cash payment, completion and a 5★ review. It then smoke-tests a
 checks access control. Screenshots are saved to `e2e/screenshots/`. **The test truncates the local database.** It
 refuses to run against anything that is not localhost.
 
+## Live project status
+
+- Supabase project **`just-clean`** (`sfxnxbgmkbjoqsknmihp`, region `ap-south-1` Mumbai, free plan) is created and
+  every migration is applied: schema, RLS, order engine, storage buckets, realtime, `pg_cron` every 5 minutes,
+  reference data, and tightened function grants.
+- The app uses this project **by default**. Its URL and publishable key are in `src/lib/env.ts`; both are public by
+  design and the data is protected by RLS. The service-role key is **not** in the repo.
+- Vercel deploys to `bom1` (Mumbai) to sit next to the database (`vercel.json`).
+- **Sign-in:** email OTP is the default and phone OTP is the second option. Phone shows a clear message until an SMS
+  provider is connected.
+- **Online subscription payment** (Moyasar) stays off until `MOYASAR_SECRET_KEY` is set. Partners pay by bank
+  transfer and the admin confirms it.
+
+**Three dashboard settings are still required.** They cannot be changed from code:
+1. Authentication → URL Configuration: set **Site URL** to the Vercel URL and add `https://<vercel-url>/auth/callback`
+   to Redirect URLs. Without this, the login link in the email points to localhost.
+2. Authentication → Email Templates → **Magic Link** and **Confirm signup**: add `Code: {{ .Token }}` so users can
+   type the code instead of clicking the link.
+3. Before real customers: Authentication → SMTP Settings, connect a custom SMTP (e.g. Resend). Supabase's built-in
+   email only delivers to your own team's addresses and only a few emails per hour.
+
 ## Production setup (Supabase + Vercel)
 
 1. **Create a Supabase project** for this app. Do not reuse another app's project. Pick the closest region available.

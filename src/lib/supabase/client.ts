@@ -1,12 +1,11 @@
 "use client";
 import { createBrowserClient } from "@supabase/ssr";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
 let client: ReturnType<typeof createBrowserClient> | null = null;
 
 export function getBrowserClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  client ??= createBrowserClient(url, key);
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  client ??= createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   return client;
 }

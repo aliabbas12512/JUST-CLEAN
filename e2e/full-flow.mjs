@@ -29,6 +29,7 @@ const ctxFor = async (opts = {}) => {
 
 async function login(page, phone, next = "/") {
   await page.goto(`${BASE}/login?next=${encodeURIComponent(next)}`);
+  await page.click("text=الدخول برقم الجوال"); // email is the default; switch to phone OTP
   await page.fill('input[autocomplete="tel-national"]', phone);
   await page.click('button[type="submit"]');
   await page.fill('input[autocomplete="one-time-code"]', "123456");

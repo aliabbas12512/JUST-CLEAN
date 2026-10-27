@@ -8,7 +8,7 @@ import { getBrowserClient } from "@/lib/supabase/client";
 
 export function LoginForm({ next }: { next: string }) {
   const { t } = useI18n();
-  const [mode, setMode] = useState<"phone" | "email">("phone");
+  const [mode, setMode] = useState<"phone" | "email">("email");
   const [step, setStep] = useState<"ask" | "verify">("ask");
   const [identifier, setIdentifier] = useState("");
   const [sentTo, setSentTo] = useState("");
@@ -82,7 +82,7 @@ export function LoginForm({ next }: { next: string }) {
         </form>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); verify(); }} className="space-y-4">
-          <p className="text-sm text-[var(--muted)]">{fmt(t.auth.codeSent, { phone: sentTo })}</p>
+          <p className="text-sm text-[var(--muted)]">{fmt(mode === "email" ? t.auth.emailSent : t.auth.codeSent, { phone: sentTo })}</p>
           <Field label={t.auth.code}>
             <Input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 8))} inputMode="numeric" autoComplete="one-time-code" dir="ltr" className="text-center text-2xl tracking-[0.4em]" required />
           </Field>
